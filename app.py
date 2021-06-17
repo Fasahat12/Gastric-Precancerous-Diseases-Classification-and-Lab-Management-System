@@ -526,8 +526,8 @@ def acceptUser(id):
         #starts up server
         server.starttls()
         #app.logger.info(os.environ.get('Email'))
-        server.login("fasahatkhan52@gmail.com","pqurfblbvmbepfvo")
-        server.sendmail("fasahatkhan52@gmail.com",email,message)
+        server.login(os.environ.get('Email'),os.environ.get('Password'))
+        server.sendmail(os.environ.get('Email'),email,message)
 
         # execute query
         cur.execute("UPDATE user SET user_type='0' WHERE id=%s",[id])
@@ -577,8 +577,8 @@ def forgot():
             #starts up server
             server.starttls()
 
-            server.login("fasahatkhan52@gmail.com","pqurfblbvmbepfvo")
-            server.sendmail("fasahatkhan52@gmail.com",email,message)
+            server.login(os.environ.get('Email'),os.environ.get('Password'))
+            server.sendmail(os.environ.get('Email'),email,message)
             # Close connection
             cur.close()
             msg = "You have received a password reset email"
