@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>GPDC PDF</title>
+
+    <!-- Including CSS and Bootstrap-->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  </head>
+  <body>
+      <div class="container">
+          <h1 class='text-center' style='text-decoration:underline solid blue;margin-bottom:50px;'>GPD Classifier Report</h1>
+          <div class="row"  style='margin-bottom:50px;'>
+            <div class="col-md-4">
+
+            </div>
+            <div class="col-md-4">
+
+            </div>
+            <div class="col-md-4">
+              <img class='img-rounded pull pull-right' src="{{full_filename}}" width='140' height='140'>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+                <table class='table table-condensed'>
+                  <tr>
+                    <th>Name</th>
+                    <th>Date of Birth</th>
+                    <th>Age</th>
+                    <th>Gender</th>
+                    <th>Time Added</th>
+                  </tr>
+                  <tr>
+                    <td>{{name}}</td>
+                    <td>{{dob}}</td>
+                    <td>{{age}}</td>
+                    <td>{{gender}}</td>
+                    <td>{{time_added}}</td>
+                  </tr>
+                </table>
+            </div>
+          </div>
+      </div>
+      <h4 class='bg-primary' style='margin-top:250px;padding:5px;'>GPD Classification: {{pred}}</h4>
+
+  </body>
+</html>

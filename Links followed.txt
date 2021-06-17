@@ -1,0 +1,12 @@
+These are the links that are followed for the implementation.
+
+Flask App:
+https://www.youtube.com/watch?v=zRwy8gtgJ1A&list=PLcDxVjglvA7lwqZ4WfZyBkE0drLI9yf6U
+
+Email sending:
+https://www.youtube.com/watch?v=U5MBYN6an70
+
+Forgot Password:
+https://www.youtube.com/watch?v=an64qDD4InA&t=950s
+https://www.youtube.com/watch?v=iyCEw23a10c
+https://www.youtube.com/watch?v=nRadeokXTs4&t=665s

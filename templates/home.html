@@ -1,0 +1,15 @@
+<!-- Extends the layout.html in this file-->
+{% extends 'layout.html'%}
+
+<!-- {block} Adds this code to layout body-->
+{% block body %}
+  <div class="jumbotron text-center">
+    <h1>Gastric Diseases Classification App</h1>
+    <p class='lead'>A web application that will be used for medical and health
+purposes, the app is a platform for physicians and pathologists.</p>
+    {% if session.logged_in == NULL %}
+        <a href="/register" class='btn btn-primary btn-lg'>Register</a>
+        <a href="/login" class='btn btn-success btn-lg'>Login</a>
+    {% endif %}
+  </div>
+{% endblock %}

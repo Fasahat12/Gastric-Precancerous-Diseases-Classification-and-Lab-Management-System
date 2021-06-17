@@ -1,0 +1,17 @@
+1.  Login and registration 
+2.  Forget Password 
+3.  Registration Validation 
+	i. Name (Should start with alphabet, max 50 characters allowed, Required Field)
+	ii. Email (Should follow correct email format i.e abc@xyz.com, Required Field)
+	iii. CNIC (Should be numeric and follow pattern 12345-1234567-1)
+	iv. Speciality (Required Field, max 50 characters)
+	v. Username (Required Field, max 25, min 5, should start with alphabet)
+	vi. Password (required field, should contain 1 Uppercase, 1 number and 1 character, min 8)
+	vii. Confirm Password (required field, should match password)
+4.  Admin Side 
+5.  View Users
+6.  View Patients
+7.  Approve Delete users request
+8.  User Side
+9.  Patients CRUD
+10. Classify Images 
