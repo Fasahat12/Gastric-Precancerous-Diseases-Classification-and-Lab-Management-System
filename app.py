@@ -1,9 +1,9 @@
-from flask import Flask,render_template,flash,redirect,url_for,session,request,logging, make_response
+from flask import Flask,render_template,flash,redirect,url_for,session,request,logging, make_response,jsonify
 #to import Articles function from data.py
 from flask_mysqldb import MySQL
-from wtforms import Form,StringField, TextAreaField, PasswordField, validators
-from flask_wtf.file import FileField, FileRequired
-from wtforms.fields.html5 import EmailField
+from wtforms import Form,StringField, TextAreaField, PasswordField, validators, SubmitField, SelectField
+from flask_wtf.file import FileField, FileRequired, DataRequired
+from wtforms.fields.html5 import EmailField, DateTimeLocalField
 from passlib.hash import sha256_crypt
 from functools import wraps
 import smtplib
@@ -30,13 +30,16 @@ app = Flask(__name__)
 # Config MYSQL
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = ''
+app.config['MYSQL_PASSWORD'] = '12345'
 app.config['MYSQL_DB'] = 'GPDC'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 app.config['INITIAL_FILE_UPLOADS'] = 'static/img/uploads'
 
 # Loading model
-model = models.load_model('static/model/gpdc_model.h5')
+model1 = models.load_model('static/model/custom.h5')
+model2 = models.load_model('static/model/VGG16.h5')
+model3 = models.load_model('static/model/VGG19.h5')
+
 
 
 #initialize MySQL
@@ -52,15 +55,31 @@ def allowed_file(filename):
 
 #function to classify images
 def predict_label(img_path):
-	i = i1.load_img(img_path, target_size=(32,32))
-	i=cv2.imread(img_path)
-	resized=cv2.resize(i,(32,32))
-	i = i1.img_to_array(i)/255.0
-	i = i.reshape(1, 32,32,3)
-	result = model.predict(i)
-	ind = np.argmax(result)
-	classes = ['Erosion','Polyp','Ulcer']
-	return classes[ind]
+    i = i1.load_img(img_path, target_size=(32,32))
+    i=cv2.imread(img_path)
+    resized=cv2.resize(i,(32,32))
+    i = i1.img_to_array(i)/255.0
+    i = i.reshape(1, 32,32,3)
+    #result = model.predict(i)
+    #Weighted average ensemble
+    models = [model1, model2, model3]
+    preds = [model.predict(i) for model in models]
+    preds=np.array(preds)
+    weights = [0.4, 0.1, 0.3]
+    #Use tensordot to sum the products of all elements over specified axes.
+    result = np.tensordot(preds, weights, axes=((0),(0)))
+
+    a = round(result[0,0],2)*100
+    b = round(result[0,1],2)*100
+    c = round(result[0,2],2)*100
+    probability = [a,b,c]
+    app.logger.info(a)
+    app.logger.info(b)
+    app.logger.info(c)
+    app.logger.info(result)
+    ind = np.argmax(result)
+    classes = ['Erosion','Polyp','Ulcer']
+    return classes[ind],probability[ind]
 
 
 
@@ -235,6 +254,38 @@ def is_logged_in(f):
             return redirect(url_for('login'))
     return wrap
 
+
+def redirect_url(default='index'):
+    return request.args.get('next') or request.referrer or url_for(default)
+
+# Check if user is admin
+def is_admin_in(f):
+    @wraps(f)
+    def wrap(*args,**kwargs):
+        if session['user_type'] == 1:
+            return f(*args,**kwargs)
+        else:
+            flash('Unauthorized Access','danger')
+            return redirect(redirect_url('dashboard'))
+    return wrap
+
+# Check if user is physician
+def is_physician_in(f):
+    @wraps(f)
+    def wrap(*args,**kwargs):
+        if session['user_type'] == 0:
+            return f(*args,**kwargs)
+        else:
+            flash('Unauthorized Access','danger')
+            return redirect(redirect_url('admin'))
+    return wrap
+
+
+
+
+
+
+
 #Profile Route
 @app.route('/profile')
 @is_logged_in
@@ -249,7 +300,7 @@ def profile():
     user = cur.fetchall()
 
     if result > 0:
-        return render_template('profile.html', user=user)
+        return render_template('profile.html', user=user,id=id)
 
     else:
         msg = "No User Found"
@@ -272,19 +323,43 @@ def logout():
 # Dashboard
 @app.route('/dashboard')
 @is_logged_in
+@is_physician_in
 def dashboard():
-    return render_template('dashboard.html')
+
+    # Create Cursor
+    cur = mysql.connection.cursor()
+
+    id = session['id']
+
+    result = cur.execute("SELECT *,concat('I8-',lpad(p_id,4,'0')) AS p_id2  FROM patients WHERE user_id=%s",[id])
+
+    patient_records = cur.fetchall()
+
+    result = cur.execute("SELECT COUNT(p_id) AS all_patients FROM patients WHERE user_id=%s",[id])
+
+    data = cur.fetchone()
+
+    patients = data['all_patients']
+
+    result = cur.execute("SELECT COUNT(disease_id) AS all_reports FROM disease WHERE patient_id in (SELECT p_id from patients WHERE user_id=%s)",[id])
+
+    data = cur.fetchone()
+
+    reports = data['all_reports']
+
+    return render_template('dashboard.html',reports=reports,patients=patients,patient_records=patient_records)
 
 #Patients Route
 @app.route('/patients')
 @is_logged_in
+@is_physician_in
 def patients():
     #Create Cursor
     cur = mysql.connection.cursor()
 
     id = session['id']
     #Get Patients
-    result = cur.execute("SELECT * FROM patients WHERE user_id=%s",[id])
+    result = cur.execute("SELECT *,concat('I8-',lpad(p_id,4,'0')) as p_id2 FROM patients WHERE user_id=%s",[id])
 
     patients = cur.fetchall()
 
@@ -301,15 +376,17 @@ def patients():
 
 # Patient Form Class
 class PatientForm(Form):
-    p_name = StringField('Full Name',[validators.Length(min=1,max=50)])
-    p_dob = StringField('Date of Birth',[validators.Length(min=1,max=50)])
-    p_age = StringField('Age',[validators.Length(min=1,max=50)])
-    p_docname = StringField('Doctor Name',[validators.Length(min=1,max=50)])
-    p_gender = StringField('Gender',[validators.Length(min=1,max=50)])
+    p_name = StringField('Full Name')
+    p_dob = StringField('Date of Birth')
+    p_age = StringField('Age')
+    p_docname = StringField('Doctor Name')
+    p_gender = SelectField(u'Gender',choices = [('Male','Male'),('Female','Female')])
+
 
 #Add Patient Route
 @app.route('/add_patient',methods = ['GET', 'POST'])
 @is_logged_in
+@is_physician_in
 def add_patient():
     form = PatientForm(request.form)
     if request.method == 'POST' and form.validate():
@@ -339,6 +416,7 @@ def add_patient():
 #Edit Patient Route
 @app.route('/edit_patient/<string:id>',methods = ['GET', 'POST'])
 @is_logged_in
+@is_physician_in
 def edit_patient(id):
 
     #Create Cursor
@@ -383,10 +461,68 @@ def edit_patient(id):
         return redirect(url_for('patients'))
     return render_template('edit_patient.html',form=form)
 
+# User Form Class
+class UserForm(Form):
+    name = StringField('Name')
+    cnic = StringField('CNIC')
+    speciality = StringField('Speciality')
+    email = StringField('Email')
+    username = StringField('Username')
+
+#Edit Profile Route
+@app.route('/edit_profile/<string:id>',methods = ['GET', 'POST'])
+@is_logged_in
+def edit_profile(id):
+
+    #Create Cursor
+    cur = mysql.connection.cursor()
+
+    #Get Patients by id
+    result = cur.execute("SELECT * FROM user WHERE id=%s", [id])
+
+    user = cur.fetchone()
+
+    cur.close()
+
+    #Get form
+    form = UserForm(request.form)
+
+    #populate patient form fields
+    form.name.data = user['name']
+    form.cnic.data = user['cnic']
+    form.speciality.data = user['speciality']
+    form.email.data = user['email']
+    form.username.data = user['username']
+
+    if request.method == 'POST' and form.validate():
+        name = request.form['name']
+        cnic = request.form['cnic']
+        speciality = request.form['speciality']
+        email = request.form['email']
+        username = request.form['username']
+
+        #Create cursor
+        cur = mysql.connection.cursor()
+
+        #Execute
+        cur.execute("UPDATE user SET name=%s, cnic=%s, speciality=%s, email=%s, username=%s WHERE id = %s", (name,cnic,speciality,email,username, id))
+
+        #commit to DB
+        mysql.connection.commit()
+
+        #close connection
+        cur.close()
+
+        flash('Profile Edited','success')
+        return redirect(url_for('profile'))
+    else:
+        return render_template('edit_profile.html',form=form)
+
 
 #Delete Patient Route
 @app.route('/delete_patient/<string:id>', methods=['POST'])
 @is_logged_in
+@is_physician_in
 def delete_patient(id):
     #Create Cursor
     cur = mysql.connection.cursor()
@@ -407,13 +543,48 @@ def delete_patient(id):
 #Admin Dashboard Route
 @app.route('/admin')
 @is_logged_in
+@is_admin_in
 def admin():
-    return render_template('admin_dashboard.html')
+
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    result = cur.execute("SELECT COUNT(id) AS users FROM user WHERE user_type='0'")
+
+    data = cur.fetchone()
+
+    users = data['users']
+
+    result = cur.execute("SELECT COUNT(p_id) AS all_patients FROM patients")
+
+    data = cur.fetchone()
+
+    patients = data['all_patients']
+
+    result = cur.execute("SELECT * FROM user WHERE user_type='0'")
+
+    user_records = cur.fetchall()
+
+    result = cur.execute("SELECT COUNT(disease_id) AS disease_reports FROM disease")
+
+    data = cur.fetchone()
+
+    reports = data['disease_reports']
+
+    result = cur.execute("SELECT *,concat('I8-',lpad(patients.p_id,4,'0')) AS p_id2 FROM patients")
+
+    patient_records = cur.fetchall()
+
+    cur.close()
+
+
+    return render_template('admin_dashboard.html',patient_records=patient_records,reports=reports,user_records=user_records,patients=patients,users=users)
 
 
 # User Requests
 @app.route('/user_requests')
 @is_logged_in
+@is_admin_in
 def userRequests():
 
     # Create cursor
@@ -438,6 +609,7 @@ def userRequests():
 #Users Route for admin
 @app.route('/user')
 @is_logged_in
+@is_admin_in
 def user():
     #Create Cursor
     cur = mysql.connection.cursor()
@@ -462,6 +634,7 @@ def user():
 # Delete User
 @app.route('/delete_user_request/<string:id>',methods=['POST'])
 @is_logged_in
+@is_admin_in
 def deleteUserRequest(id):
     # Create cursor
     cur = mysql.connection.cursor()
@@ -483,6 +656,7 @@ def deleteUserRequest(id):
 #Delete User Route
 @app.route('/delete_user/<string:id>', methods=['POST'])
 @is_logged_in
+@is_admin_in
 def delete_user(id):
     #Create Cursor
     cur = mysql.connection.cursor()
@@ -504,6 +678,7 @@ def delete_user(id):
 # Accept User
 @app.route('/user_requests/<string:id>',methods=['GET','POST'])
 @is_logged_in
+@is_admin_in
 def acceptUser(id):
 
     if request.method == 'POST':
@@ -632,13 +807,14 @@ def resetPassword(token):
 # Patient List for Image Classification Route
 @app.route('/classify')
 @is_logged_in
+@is_physician_in
 def classify():
     #Create Cursor
     cur = mysql.connection.cursor()
 
     id = session['id']
     #Get Patients
-    result = cur.execute("SELECT * FROM patients WHERE user_id=%s",[id])
+    result = cur.execute("SELECT *,concat('I8-',lpad(p_id,4,'0')) as p_id2 FROM patients WHERE user_id=%s",[id])
 
     patients = cur.fetchall()
 
@@ -656,6 +832,7 @@ def classify():
 #Classify Image Route
 @app.route('/classify_image/<string:id>',methods = ['GET', 'POST'])
 @is_logged_in
+@is_physician_in
 def classify_image(id):
 
     user_id = session['id']
@@ -710,7 +887,7 @@ def classify_image(id):
              image = image.resize((32,32))
              img_path = os.path.join(app.config['INITIAL_FILE_UPLOADS'], name)
              image.save(img_path)
-             pred = predict_label(img_path)
+             pred , prob = predict_label(img_path)
 
              #Execute
              cur.execute("INSERT INTO disease(patient_id,disease_name,image) VALUES(%s,%s,%s)", (id,pred,img_path))
@@ -727,12 +904,13 @@ def classify_image(id):
 
 
              # Returning template, filename, extracted text
-             return render_template('classify_image.html', full_filename = full_filename, pred = pred,disease_id=disease_id)
+             return render_template('classify_image.html', full_filename = full_filename, pred = pred,prob=prob,disease_id=disease_id)
 
 
 #Classify Image Classification into PDF
 @app.route('/gpdc_pdf/<string:id>')
 @is_logged_in
+@is_physician_in
 def gpdc_pdf(id):
 
     user_id = session['id']
@@ -751,7 +929,7 @@ def gpdc_pdf(id):
         return redirect(url_for('classify'))
 
     # execute query
-    result = cur.execute("SELECT * FROM patients INNER JOIN disease ON patients.p_id=disease.patient_id WHERE disease.disease_id=%s AND patients.user_id=%s",(id,user_id))
+    result = cur.execute("SELECT *,concat('I8-',lpad(patients.p_id,4,'0')) as p_id2 FROM patients INNER JOIN disease ON patients.p_id=disease.patient_id WHERE disease.disease_id=%s AND patients.user_id=%s",(id,user_id))
 
     data = cur.fetchone()
 
@@ -762,6 +940,8 @@ def gpdc_pdf(id):
         flash("No Such Record Exists",'danger')
         return redirect(url_for('classify'))
 
+
+    id = data['p_id2']
 
     create_date = data['create_date']
 
@@ -778,10 +958,9 @@ def gpdc_pdf(id):
     #Close Connection
     cur.close()
 
-
     src = os.path.dirname(os.path.abspath(__file__))+'/'+data['image']#'/static/img/no_image.PNG'
     app.logger.info(src)
-    rendered = render_template('gpdc_pdf.html',full_filename=src,name=name,dob=dob,age=age,gender=gender,time_added=create_date,pred=disease_name)
+    rendered = render_template('gpdc_pdf.html',id=id,full_filename=src,name=name,dob=dob,age=age,gender=gender,time_added=create_date,pred=disease_name)
     options = {
   "enable-local-file-access": None
     }
@@ -798,6 +977,7 @@ def gpdc_pdf(id):
 # Patient GPD Classification History
 @app.route('/history/<string:id>')
 @is_logged_in
+@is_physician_in
 def gpdc_history(id):
 
     user_id = session['id']
@@ -832,7 +1012,479 @@ def gpdc_history(id):
         return render_template('gpdc_history.html' , msg=msg)
 
 
+# Add Test Type Form
+class labTest(Form):
 
+    test_name = StringField(label='Test name',validators=[DataRequired(),validators.Length(min=1),validators.Regexp(regex="^[a-zA-Z ]*$",message="Only alphabets and spaces are allowed")])
+
+    code = StringField(label='code',validators=[DataRequired(),validators.Length(min=1),validators.Regexp(regex="^[a-zA-Z ]*$",message="Only alphabets and spaces are allowed")])
+
+    submit = SubmitField(label="Submit")
+
+
+# View type of Lab Test
+@app.route('/lab_tests',methods=['GET','POST'])
+@is_logged_in
+@is_physician_in
+def labTests():
+
+    form = labTest(request.form)
+
+    if request.method == 'POST' and form.validate():
+        test_name = form.test_name.data
+        code = form.code.data
+        test_name = test_name.strip()
+        code = code.strip()
+
+        # Create Cursor
+        cur = mysql.connection.cursor()
+
+        # Execute
+        cur.execute("INSERT INTO lab_tests(test_name,code) VALUES(%s, %s)",(test_name,code))
+
+        # Commit to DB
+        mysql.connection.commit()
+
+        #Close connection
+        cur.close()
+
+        flash('Lab Test Created', 'success')
+
+        return redirect(url_for('labTests'))
+
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Get Tests
+    result = cur.execute("SELECT * FROM lab_tests")
+
+    tests = cur.fetchall()
+
+    if result > 0:
+        return render_template('lab_tests.html', tests=tests, form=form)
+    else:
+        msg = 'No Lab Tests Found'
+        return render_template('lab_tests.html', msg=msg, form=form)
+    # Close connection
+    cur.close()
+
+# Test Under Category Add Form
+class TestUnder(Form):
+
+    test_name = StringField(label='Test name',validators=[DataRequired(),validators.Length(min=1),validators.Regexp(regex="^[a-zA-Z ]*$",message="Only alphabets and spaces are allowed")])
+
+    lower_limit = StringField(label='Lower limit',validators=[DataRequired(),validators.Length(min=1),validators.Regexp(regex="^([0-9]+[.]?[0-9]*)$",message="Only positive numeric or decimal values allowed")])
+
+    upper_limit = StringField(label='Upper limit',validators=[DataRequired(),validators.Length(min=1),validators.Regexp(regex="^([0-9]+[.]?[0-9]*)$",message="Only positive numeric or decimal values allowed")])
+
+    unit = StringField(label='Unit',validators=[DataRequired(),validators.Length(min=1),validators.Regexp(regex="^[a-zA-Z/%]*$",message="Only alphabets and some special characters allowed (/,%)")])
+
+    unit_price = StringField(label='Unit price',validators=[DataRequired(),validators.Length(min=1),validators.Regexp(regex="^([0-9]+[.]?[0-9]*)$",message="Only numeric or decimal values allowed")])
+
+    taxes = StringField(label='Taxes',validators=[DataRequired(),validators.Length(min=1),validators.Regexp(regex="^([0-9]+[.]?[0-9]*)$",message="Only numeric or decimal values allowed")])
+
+
+
+
+# Lab Test Type Sub Category
+@app.route('/test_under/<string:id>',methods=['GET','POST'])
+@is_logged_in
+@is_physician_in
+def testUnder(id):
+
+    form = TestUnder(request.form)
+
+    if request.method == 'POST' and form.validate():
+        test_name = form.test_name.data
+        lower_limit = form.lower_limit.data
+        upper_limit = form.upper_limit.data
+        unit = form.unit.data
+        unit_price = form.unit_price.data
+        taxes = form.taxes.data
+
+
+        # Create Cursor
+        cur = mysql.connection.cursor()
+
+        # Execute
+        cur.execute("INSERT INTO tests_under(test_name,test_id,lower_limit,upper_limit,unit,unit_price,taxes) VALUES(%s, %s, %s, %s, %s, %s, %s)",(test_name,id,lower_limit,upper_limit,unit,unit_price,taxes))
+
+        # Commit to DB
+        mysql.connection.commit()
+
+        #Close connection
+        cur.close()
+
+        flash('Test Under Category Created', 'success')
+
+        return redirect(url_for('testUnder',id=id))
+
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Get user by Lab Test Type Name
+    result = cur.execute("SELECT test_name from lab_tests WHERE id = %s ",[id])
+
+    data = cur.fetchone()
+    lab_test = data['test_name']
+
+    # Get Tests
+    result = cur.execute("SELECT * FROM tests_under WHERE test_id=%s",[id])
+
+    tests = cur.fetchall()
+
+    if result > 0:
+        return render_template('test_under.html', tests=tests, form=form,lab_test=lab_test)
+    else:
+        msg = 'No Tests Under Category Found'
+
+        return render_template('test_under.html',msg=msg,form=form,lab_test=lab_test);
+
+    # Close connection
+    cur.close()
+
+
+
+# Lab Report Fields
+class LabReport(Form):
+
+    patient = SelectField(u'Patient',coerce = int)
+    test_value = StringField(label='Test Value',validators=[DataRequired(),validators.Length(min=1),validators.Regexp(regex="^([0-9]+[.]?[0-9]*)$",message="Only numeric or decimal values allowed")])
+
+
+# Add Lab Report Data of a patient
+@app.route('/add_lab_report/<string:id>',methods=['GET','POST'])
+@is_logged_in
+@is_physician_in
+def addLabReport(id):
+
+    form = LabReport(request.form)
+
+    doc_id = session['id']
+
+    #Create Cursor
+    cur = mysql.connection.cursor()
+
+    #Get Users
+    result = cur.execute("SELECT p_id,p_name FROM patients WHERE user_id=%s",[doc_id])
+
+    patients = cur.fetchall()
+
+    patientData = []
+    for patient in patients:
+        patientData.append((patient['p_id'],patient['p_name']))
+
+    form.patient.choices = patientData
+
+    if request.method == 'POST' and form.validate():
+        patient_id = form.patient.data
+        test_value = form.test_value.data
+
+        #execute
+        result = cur.execute("INSERT INTO lab_reports(test_id,patient_id,test_value) VALUES(%s,%s,%s)",(id,patient_id,test_value))
+
+        #commit to DB
+        mysql.connection.commit()
+
+        flash('Report Added','success')
+        return redirect(url_for('addLabReport',id=id))
+
+
+    result = cur.execute("SELECT lab_tests.test_name as test_type_name,lab_tests.Id as type_id, tests_under.test_name as test_name  FROM lab_tests INNER JOIN tests_under ON lab_tests.Id=tests_under.test_id WHERE tests_under.id=%s",[id])
+
+    data = cur.fetchone()
+
+    test_data = data
+
+    #Get Users
+    result = cur.execute("SELECT p_id,p_name FROM patients WHERE user_id=%s",[doc_id])
+
+    if result > 0:
+        return render_template('add_lab_report.html',test_data=test_data,form=form)
+    else:
+        msg = "No Patients Found"
+        return render_template('add_lab_report.html' , msg=msg,form=form)
+
+# Lab Request Fields
+class LabRequest(Form):
+
+    patient = SelectField(u'Patient',coerce = int)
+    request_date = DateTimeLocalField('Request Date',format='%Y-%m-%dT%H:%M',validators=[DataRequired()])
+    urgency = SelectField(u'Urgency Level',choices = [('Normal','Normal'),('High','High'),('Very High','Very High')])
+
+
+# Add Lab Request for a patient
+@app.route('/add_lab_request/<string:id>',methods=['GET','POST'])
+@is_logged_in
+@is_physician_in
+def addLabRequest(id):
+
+    form = LabRequest(request.form)
+
+    doc_id = session['id']
+
+    #Create Cursor
+    cur = mysql.connection.cursor()
+
+    #Get Users
+    patient_result = cur.execute("SELECT p_id,p_name FROM patients WHERE user_id=%s",[doc_id])
+
+    patients = cur.fetchall()
+
+    patientData = []
+    for patient in patients:
+        patientData.append((patient['p_id'],patient['p_name']))
+
+    form.patient.choices = patientData
+
+    if request.method == 'POST' and form.validate():
+        request_date = form.request_date.data.strftime("%Y-%m-%d %H:%M:00")
+        patient_id = form.patient.data
+        urgency_level = form.urgency.data
+
+        #execute
+        result = cur.execute("INSERT INTO lab_requests(test_id,patient_id,urgency_level,request_date) VALUES(%s,%s,%s,%s)",(id,patient_id,urgency_level,request_date))
+
+        #commit to DB
+        mysql.connection.commit()
+
+        flash('Request Added','success')
+        return redirect(url_for('addLabRequest',id=id))
+
+
+
+    result = cur.execute("SELECT lab_tests.test_name as test_type_name,lab_tests.Id as type_id, tests_under.test_name as test_name  FROM lab_tests INNER JOIN tests_under ON lab_tests.Id=tests_under.test_id WHERE tests_under.id=%s",[id])
+
+    data = cur.fetchone()
+
+    test_data = data
+
+    if patient_result > 0:
+        return render_template('add_lab_request.html',test_data=test_data,form=form)
+    else:
+        msg = "No Patients Found"
+        return render_template('add_lab_request.html' , msg=msg,form=form)
+
+
+
+
+class GenerateLabReport(Form):
+    patient = SelectField(u'Patient Name',coerce = int)
+    report_date = SelectField(u'Report Date',coerce = int)
+
+
+#  Form data to generate lab report in pdf format
+@app.route('/lab_reports',methods=['GET','POST'])
+@is_logged_in
+@is_physician_in
+def labReports():
+    form = GenerateLabReport(request.form)
+
+    doc_id = session['id']
+
+    #Create Cursor
+    cur = mysql.connection.cursor()
+
+    #Get Users
+    patient_result = cur.execute("SELECT p_id,p_name FROM patients WHERE user_id=%s AND p_id in (SELECT patient_id FROM lab_reports)",[doc_id])
+
+    patients = cur.fetchall()
+
+    patientData = []
+    for patient in patients:
+        patientData.append((patient['p_id'],patient['p_name']))
+
+    form.patient.choices = patientData
+
+    if request.method == 'POST':
+        patient = str(form.patient.data)
+        report_date = str(request.form['report_date'])
+        app.logger.info(report_date)
+        return patient + " " + report_date
+
+    return render_template('lab_reports.html',form=form)
+
+
+# Process function is use to make receive an ajax request
+# To receive patient name and return lab report dates of that patient
+@app.route('/process',methods=['GET','POST'])
+@is_logged_in
+@is_physician_in
+def process():
+
+    patient_id = request.form['patient']
+
+    if patient_id:
+        #return jsonify({'one':'20-01-2020','two':'10-01-2010'})
+            #Create Cursor
+        cur = mysql.connection.cursor()
+
+        #Get Users
+        report_dates = cur.execute("SELECT DATE_FORMAT(date,'%%Y-%%m-%%d') as report_date FROM lab_reports WHERE patient_id = %s GROUP BY report_date",[patient_id])
+
+        report_dates = cur.fetchall()
+
+
+        return jsonify(report_dates)
+
+    return 'error'
+
+#Generate PDF of Lab Report
+@app.route('/lab_report_pdf',methods=['GET','POST'])
+@is_logged_in
+@is_physician_in
+def lab_report_pdf():
+
+    physician_id = session['id']
+
+    # Create cursor
+    cur = mysql.connection.cursor()
+
+    # Execute Query
+    result = cur.execute("SELECT name from user WHERE id=%s",[physician_id])
+
+    if result > 0:
+        data = cur.fetchone();
+        physician_name = data['name']
+    else:
+        return 'No User Data Found'
+
+
+    if request.method == 'POST':
+        # Extracting data from request form
+        patient_id = request.form['patient'];
+        report_date = request.form['report_date'];
+
+        #Get Users
+        result = cur.execute("SELECT * FROM (((lab_reports INNER JOIN patients ON p_id = patient_id) INNER JOIN tests_under ON lab_reports.test_id = tests_under.id) INNER JOIN lab_tests ON tests_under.test_id = lab_tests.Id) WHERE DATE_FORMAT(lab_reports.date,'%%Y-%%m-%%d')=%s AND lab_reports.patient_id=%s ORDER BY lab_tests.test_name",(report_date,patient_id))
+
+        report_details = cur.fetchall()
+
+        if result > 0:
+            cur.close()
+
+            report_data = {}
+            for info in report_details:
+                report_data[info['lab_tests.test_name']] = {'TEST':[],'RESULT':[],'UNIT':[],'UPPER_LIMIT':[],'LOWER_LIMIT':[]}
+
+            for info in report_details:
+                report_data[info['lab_tests.test_name']]['TEST'].append(info['test_name'])
+                report_data[info['lab_tests.test_name']]['RESULT'].append(info['test_value'])
+                report_data[info['lab_tests.test_name']]['UNIT'].append(info['unit'])
+                report_data[info['lab_tests.test_name']]['UPPER_LIMIT'].append(info['upper_limit'])
+                report_data[info['lab_tests.test_name']]['LOWER_LIMIT'].append(info['lower_limit'])
+                report_data[info['lab_tests.test_name']]['LENGTH'] = len(report_data[info['lab_tests.test_name']]['TEST'])
+
+
+            rendered = render_template('lab_report_pdf.html',report_details=report_details,report_date=report_date,physician_name=physician_name,report_data=report_data)
+            options = {
+          "enable-local-file-access": None
+            }
+            pdf = pdfkit.from_string(rendered,False,options=options)
+
+            response = make_response(pdf)
+            response.headers['Content-Type'] = 'application/pdf'
+            response.headers['Content-Disposition'] = 'inline; lab_report.pdf'
+
+            return response
+
+        else:
+            msg = "No User Data Found"
+            return msg#render_template('profile.html' , msg=msg)
+
+
+# Lab Request List
+@app.route('/lab_requests')
+@is_logged_in
+@is_physician_in
+def lab_requests():
+    #Create Cursor
+    cur = mysql.connection.cursor()
+
+    id = session['id']
+    #Get Patients
+    result = cur.execute("SELECT lab_requests.id as id,p_name,lab_tests.test_name as test_category,tests_under.test_name as test_name,request_date,urgency_level FROM (((lab_requests INNER JOIN tests_under ON lab_requests.test_id=tests_under.id ) INNER JOIN lab_tests ON tests_under.test_id = lab_tests.Id) INNER JOIN patients ON lab_requests.patient_id=patients.p_id ) WHERE patients.user_id=%s",[id])
+
+    patients = cur.fetchall()
+
+    if result > 0:
+        return render_template('lab_requests.html', patients=patients)
+
+    else:
+        msg = "No Requests Found"
+        return render_template('lab_requests.html' , msg=msg)
+
+    #Close Connection
+    cur.close()
+
+    return render_template('lab_requests.html')
+
+
+#Delete Lab Request Route
+@app.route('/delete_lab_request/<string:id>', methods=['POST'])
+@is_logged_in
+@is_physician_in
+def delete_lab_request(id):
+    #Create Cursor
+    cur = mysql.connection.cursor()
+
+    #Execute
+    cur.execute("DELETE FROM lab_requests WHERE id= %s", [id])
+
+    #commit to DB
+    mysql.connection.commit()
+
+    #close connection
+    cur.close()
+
+    flash('Request Deleted','success')
+    return redirect(url_for('lab_requests'))
+
+
+#Create Invoice
+@app.route('/invoice_pdf/<string:id>')
+@is_logged_in
+@is_physician_in
+def invoice_pdf(id):
+    #Create Cursor
+    cur = mysql.connection.cursor()
+
+    #Get Patients
+    result = cur.execute("SELECT lab_requests.id as id,p_name,p_age,p_gender,p_docname,lab_tests.test_name as test_category,tests_under.test_name as test_name,tests_under.unit_price as price,tests_under.taxes as tax,request_date,urgency_level FROM (((lab_requests INNER JOIN tests_under ON lab_requests.test_id=tests_under.id ) INNER JOIN lab_tests ON tests_under.test_id = lab_tests.Id) INNER JOIN patients ON lab_requests.patient_id=patients.p_id ) WHERE lab_requests.id=%s",[id])
+
+    patient = cur.fetchone()
+    app.logger.info('helloooo')
+    name = patient['p_name']
+    age = patient['p_age']
+    gender = patient['p_gender']
+    doctor = patient['p_docname']
+    date = patient['request_date']
+    test_category = patient['test_category']
+    test_name = patient['test_name']
+    price = patient['price']
+    tax = patient['tax']
+
+
+    if result > 0:
+        rendered = render_template('invoice_pdf.html',name=name,age=age,gender=gender,doctor=doctor,date=date,test_category=test_category,test_name=test_name,tax=tax,price=price)
+        options = {
+        "enable-local-file-access": None
+        }
+        pdf = pdfkit.from_string(rendered,False,options=options)
+
+        response = make_response(pdf)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = 'inline; output.pdf'
+
+        return response
+
+    else:
+        flash('No Data Found','success')
+        return redirect(url_for('lab_requests'))
+
+
+    #Close Connection
+    cur.close()
 
 
 

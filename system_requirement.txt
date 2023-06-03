@@ -1,4 +1,4 @@
-1. Make sure at least python version 3 is installed in your system.
+--1. Make sure at least python version 3 is installed in your system.
    To check type python --version in command prompt. 
    Check if is python version 64bit or not. Only install 64bit
    version of python if your windows is also 64bit.
@@ -27,9 +27,13 @@ file name (gpdc.sql)
 
 7. pip install email_validator
 
-8. pip install tensorflow
+8. pip3 install tensorflow==2.4.1
 
-9. pip install keras
+9. pip3 install keras==2.4.0
+
+10. pip install pdfkit
+
+11. pip install wkhtmltopdf
 
 
 

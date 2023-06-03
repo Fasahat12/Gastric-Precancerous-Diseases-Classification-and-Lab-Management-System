@@ -20,7 +20,13 @@
     <!-- Custom styles for this template -->
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/dashboard.css') }}">
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/style.css') }}">
-    
+
+    <!-- Including CSS and Bootstrap-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+
+
 
   </head>
 
@@ -67,8 +73,10 @@
             <li {% if url_for(request.endpoint) == '/user'%} class="active" {% else %} class='inactive'  {% endif %}><a href="/user"><span class="fa fa-users icon-md"></span> <span class='sidebar-option-name'>Users</span></a></li>
             {% elif session.user_type == 0 %}
             <li {% if request.endpoint == 'patients' %} class="active" {% else %} class='inactive' {% endif %}><a href="/patients"><span class="fa fa-users icon-md"></span> <span class='sidebar-option-name'>Patients</span></a></li>
-            <li {% if request.endpoint == 'classify' %} class="active" {% else %} class='inactive' {% endif %}><a href="/classify"><span class="fa fa-search icon-md"></span> <span class='sidebar-option-name'>Classify</span></a></li>
-
+            <li {% if request.endpoint == 'classify' %} class="active" {% else %} class='inactive' {% endif %}><a href="/classify"><span class="fa fa-search icon-md"></span> <span class='sidebar-option-name'>Analysis</span></a></li>
+            <li {% if request.endpoint == 'labTests' %} class="active" {% else %} class='inactive' {% endif %}><a href="/lab_tests"><span class="fa fa-flask icon-md"></span> <span class='sidebar-option-name'>Type of Lab Tests</span></a></li>
+            <li {% if request.endpoint == 'labReports' %} class="active" {% else %} class='inactive' {% endif %}><a href="/lab_reports"><span class="fa fa-file-pdf-o icon-md"></span> <span class='sidebar-option-name'>Lab Reports</span></a></li>
+            <li {% if request.endpoint == 'lab_requests' %} class="active" {% else %} class='inactive' {% endif %}><a href="/lab_requests"><span class="fa fa-list-alt icon-md"></span> <span class='sidebar-option-name'>Lab Requests</span></a></li>
             {% endif %}
           </ul>
 
@@ -84,7 +92,8 @@
               {% elif session.user_type == 0 %}
               <li {% if request.endpoint == 'patients' %} class="active" {% else %} class='inactive' {% endif %}><a href="/patients"><span class="fa fa-users icon-md"></span> <span class='sidebar-option-name'>Patients</span></a></li>
               <li {% if request.endpoint == 'classify' %} class="active" {% else %} class='inactive' {% endif %}><a href="/classify"><span class="fa fa-search icon-md"></span> <span class='sidebar-option-name'>Classify</span></a></li>
-
+              <li {% if request.endpoint == 'labTests' %} class="active" {% else %} class='inactive' {% endif %}><a href="/lab_tests"><span class="fa fa-flask icon-md"></span> <span class='sidebar-option-name'>Type of Lab Tests</span></a></li>
+              <li {% if request.endpoint == 'labReports' %} class="active" {% else %} class='inactive' {% endif %}><a href="/lab_reports"><span class="fa fa-file-pdf-o icon-md"></span> <span class='sidebar-option-name'>Lab Reports</span></a></li>
               {% endif %}
             </ul>
           </div>
@@ -94,6 +103,8 @@
 
             {% block profile %}{% endblock %}
              {% block patients %}{% endblock %}
+
+             {% block user %}{% endblock %}
             {% include 'includes/_messages.html' %}
               {% block body %}{% endblock %}
 
@@ -285,7 +296,7 @@
   {
 
   $(".accept-form, .delete-form").submit(function(e){
-        check = confirm('Are you sure');
+        check = confirm('Are you sure?');
 
         if(check)
         {

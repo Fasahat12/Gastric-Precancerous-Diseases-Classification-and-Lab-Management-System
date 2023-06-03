@@ -1,8 +1,174 @@
 @import url(https://fonts.googleapis.com/css?family=Raleway:300,400,600);
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300&display=swap');
+
+html {
+  scroll-behavior: smooth;
+}
+
 body
 {
   font-family: raleway,arial;
-  
+
+}
+
+.content-container
+{
+  width:90%;
+  margin:0 auto;
+}
+
+.page-container {
+  position: relative;
+  min-height: 100vh;
+}
+
+
+.content-wrap {
+  padding-bottom: 10.5rem;    /* Footer height */
+}
+
+.footer
+{
+  background: #57B0C4;
+  color: #fff;
+  padding: 25px;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  margin-top: 10px;
+  font-size: 1.6rem;
+  font-weight: normal;
+}
+
+.about
+{
+  background: #57B0C4;
+}
+
+
+.navbar
+{
+  margin-bottom: 0px;
+  border-radius: 0px;
+}
+.navbar-brand
+{
+  font-size: 2.6rem;
+}
+
+.navbar-default {
+  background-color: #57b0c4;
+  border-color: #57b0c4;
+}
+.navbar-default .navbar-brand {
+  color: #ffffff;
+}
+.navbar-default .navbar-brand:hover,
+.navbar-default .navbar-brand:focus {
+  color: #ffffff;
+}
+.navbar-default .navbar-text {
+  color: #ffffff;
+}
+.navbar-default .navbar-nav > li > a {
+  color: #ffffff;
+}
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:focus {
+
+  color: #ffffff;
+}
+.navbar-default .navbar-nav > .active > a,
+.navbar-default .navbar-nav > .active > a:hover,
+.navbar-default .navbar-nav > .active > a:focus {
+  color: #ffffff;
+  background-color: #57b0c4;
+}
+.navbar-default .navbar-nav > .open > a,
+.navbar-default .navbar-nav > .open > a:hover,
+.navbar-default .navbar-nav > .open > a:focus {
+  color: #ffffff;
+  background-color: #57b0c4;
+}
+.navbar-default .navbar-toggle {
+  border-color: #57b0c4;
+}
+.navbar-default .navbar-toggle:hover,
+.navbar-default .navbar-toggle:focus {
+  background-color: #57b0c4;
+}
+.navbar-default .navbar-toggle .icon-bar {
+  background-color: #ffffff;
+}
+.navbar-default .navbar-collapse,
+.navbar-default .navbar-form {
+  border-color: #ffffff;
+}
+.navbar-default .navbar-link {
+  color: #ffffff;
+}
+.navbar-default .navbar-link:hover {
+  color: #ffffff;
+}
+
+
+
+.jumbotron
+{
+  background: #57b0c4;
+  color: #fff;
+  min-height: 40rem;
+  position:relative;
+}
+
+.jumbotron h1
+{
+  font-size: 40px;
+  margin-top: 5.5rem;
+  line-height: 6.4rem;
+}
+
+.jumbotron p
+{
+  font-size: 18px;
+}
+
+.jumbotron .img-fluid
+{
+    position: relative;
+    bottom: 58px;
+    right: 40px;
+}
+
+.jumbotron::before, .jumbotron::after,.about::before, .about::after
+{
+  content:'';
+  position:absolute;
+  height:100px;
+  background:#fff;
+  bottom:-70px;
+  right:0;
+  left:0;
+  transform:skewY(-3deg);
+  /*Chrome and Safari*/
+  -webkit-transform:skewY(-3deg);
+  /* For Mozilla */
+  -moz-transform:skewY(-3deg);
+  /* Microsoft and IE */
+  -ms-transform:skewY(-3deg);
+
+}
+
+
+.jumbotron,.footer,.card,.about
+{
+  font-family: "Lato";
+}
+
+.about
+{
+  position:relative;
+  min-height: 35rem;
 }
 
 
@@ -87,7 +253,7 @@ body
 
 .nav-sidebar > li > a
 {
-  font-family : tahoma;
+  font-family : Tahoma;
   color : #555;
   font-size: 14px;
 }
@@ -127,6 +293,206 @@ body
   padding-right : 10px;
 }
 
+.card
+{
+  background: #fff;
+  color:#333;
+  border: 0;
+  border-radius:10px;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+  margin:5px;
+  min-height: 46rem;
+}
+
+.card img
+{
+  background: #F8F9FA;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  width: 100%;
+  min-height: 29rem;
+
+}
+
+.card .card-title
+{
+  font-weight: bold;
+  margin-top:0;
+}
+
+.card .card-text
+{
+  font-size: 16px;
+}
+
+
+
+/* Utilities */
+.sm
+{
+  font-size:1rem;
+}
+
+.md
+{
+  font-size:2rem;
+}
+
+.lg
+{
+  font-size:3rem;
+}
+
+.xl
+{
+  font-size:4rem;
+}
+
+/* Margin */
+.my-1
+{
+  /* rem multiplies the font size of the root element by default
+  html tag has font-size:16px; unless you change it.*/
+  margin:1rem 0;
+}
+
+.my-2
+{
+  margin:1.5rem 0;
+}
+
+.my-3
+{
+  /* 2 x 16 = 32px */
+  margin:2.5rem 0;
+}
+
+.my-4
+{
+  /* 4 x 16 = 64*/
+  margin:3rem 0;
+}
+
+.my-5
+{
+  margin:4rem 0;
+}
+
+.m-0
+{
+  margin: 0;
+}
+
+.m-1
+{
+  /* rem multiplies the font size of the root element by default
+  html tag has font-size:16px; unless you change it.*/
+  margin:1rem;
+}
+
+.m-2
+{
+  margin:1.5rem;
+}
+
+.m-3
+{
+  /* 2 x 16 = 32px */
+  margin:2rem;
+}
+
+.m-4
+{
+  /* 4 x 16 = 64*/
+  margin:3rem;
+}
+
+.m-5
+{
+  margin:4rem;
+}
+
+
+/* Padding */
+.py-1
+{
+  /* rem multiplies the font size of the root element by default
+  html tag has font-size:16px; unless you change it.*/
+  padding:1rem 0;
+}
+
+.py-2
+{
+  padding:1.5rem 0;
+}
+
+.py-3
+{
+  /* 2 x 16 = 32px */
+  padding:2rem 0;
+}
+
+.py-4
+{
+  padding:3rem 0;
+}
+
+.py-5
+{
+  /* 4 x 16 = 64*/
+  padding:4rem 0;
+}
+
+.p-0
+{
+  padding:0;
+}
+
+.p-1
+{
+  padding:1rem;
+}
+
+.p-2
+{
+  padding:1.5rem;
+}
+
+.p-3
+{
+  /* 2 x 16 = 32px */
+  padding:2rem;
+}
+
+.p-4
+{
+  padding:3rem;
+}
+
+.p-5
+{
+  /* 4 x 16 = 64*/
+  padding:4rem;
+}
+
+.p-0
+{
+  padding: 0;
+}
+
+.m-0
+{
+  margin: 0 !important;
+}
+
+
+.fa-ul
+{
+  margin:0 !important;
+  margin-left: 3.1rem !important;
+}
+
+
 
 
 
@@ -161,5 +527,21 @@ body
   .sidebar .active a
   {
     border-radius: 0px;
+  }
+}
+
+@media (max-width: 767px) {
+  .navbar-default .navbar-nav .open .dropdown-menu > li > a {
+    color: #ffffff;
+  }
+  .navbar-default .navbar-nav .open .dropdown-menu > li > a:hover,
+  .navbar-default .navbar-nav .open .dropdown-menu > li > a:focus {
+    color: #ffffff;
+  }
+  .navbar-default .navbar-nav .open .dropdown-menu > .active > a,
+  .navbar-default .navbar-nav .open .dropdown-menu > .active > a:hover,
+  .navbar-default .navbar-nav .open .dropdown-menu > .active > a:focus {
+    color: #ffffff;
+    background-color: #57b0c4;
   }
 }

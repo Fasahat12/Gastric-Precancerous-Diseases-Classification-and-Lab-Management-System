@@ -2,7 +2,7 @@
 
 
 {% block body %}
-  <div class='container' id='classify'>
+  <div class='container light-shadow' id='classify'>
     <h2 style='margin-bottom:25px;'>Classify Disease<small> <i>Endoscopy Images</i></small></h2>
 
     <form action='' method="post" enctype="multipart/form-data">
@@ -24,7 +24,7 @@
 
           <div class='form-group'>
             {% if pred %}
-                <h3>Prediction : {{ pred }}</h3>
+                <h4>Prediction : {{ pred }}</h4>
             {% endif %}
           </div>
 

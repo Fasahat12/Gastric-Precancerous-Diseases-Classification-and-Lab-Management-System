@@ -3,6 +3,78 @@ body {
   padding-top: 50px;
 }
 
+.navbar-inverse {
+  background-color: #ffffff;
+  border-color: #ffffff;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+  font-weight: normal;
+}
+
+.navbar-inverse .navbar-brand {
+  color: #555555;
+}
+.navbar-inverse .navbar-brand:hover,
+.navbar-inverse .navbar-brand:focus {
+  color: #555555;
+}
+.navbar-inverse .navbar-text {
+  color: #555555;
+}
+.navbar-inverse .navbar-nav > li > a {
+  color: #555555;
+}
+.navbar-inverse .navbar-nav > li > a:hover,
+.navbar-inverse .navbar-nav > li > a:focus {
+  color: #555555;
+}
+.navbar-inverse .navbar-nav > .active > a,
+.navbar-inverse .navbar-nav > .active > a:hover,
+.navbar-inverse .navbar-nav > .active > a:focus {
+  color: #555555;
+  background-color: #ffffff;
+}
+.navbar-inverse .navbar-nav > .open > a,
+.navbar-inverse .navbar-nav > .open > a:hover,
+.navbar-inverse .navbar-nav > .open > a:focus {
+  color: #555555;
+  background-color: #ffffff;
+}
+.navbar-inverse .navbar-toggle {
+  border-color: #ffffff;
+}
+.navbar-inverse .navbar-toggle:hover,
+.navbar-inverse .navbar-toggle:focus {
+  background-color: #ffffff;
+}
+.navbar-inverse .navbar-toggle .icon-bar {
+  background-color: #555555;
+}
+.navbar-inverse .navbar-collapse,
+.navbar-inverse .navbar-form {
+  border-color: #555555;
+}
+.navbar-inverse .navbar-link {
+  color: #555555;
+}
+.navbar-inverse .navbar-link:hover {
+  color: #555555;
+}
+
+@media (max-width: 767px) {
+  .navbar-inverse .navbar-nav .open .dropdown-menu > li > a {
+    color: #555555;
+  }
+  .navbar-inverse .navbar-nav .open .dropdown-menu > li > a:hover,
+  .navbar-inverse .navbar-nav .open .dropdown-menu > li > a:focus {
+    color: #555555;
+  }
+  .navbar-inverse .navbar-nav .open .dropdown-menu > .active > a,
+  .navbar-inverse .navbar-nav .open .dropdown-menu > .active > a:hover,
+  .navbar-inverse .navbar-nav .open .dropdown-menu > .active > a:focus {
+    color: #555555;
+    background-color: #ffffff;
+  }
+}
 
 /*
  * Global add-ons
@@ -205,8 +277,187 @@ body {
 
 #gpd-history
 {
-  border:1px solid #f4f4f4;box-shadow:0px 3px 7px 2px #f4f4f4;
+  border:1px solid #f4f4f4;
+
 }
+
+.well-primary
+{
+  color:#fff;
+  background-color:#007bff;
+  border-color:#007bff
+}
+
+.well-success
+{
+  color:#fff;background-color:#28a745;border-color:#28a745
+}
+
+.well-warning
+{
+color:#fff;background-color:#dc3545;border-color:#dc3545;
+}
+
+.light-shadow
+{
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+}
+
+.my-panel-primary .panel-heading
+{
+  background:#3866F1;
+  color:#fff;
+}
+
+
+/* Utilities */
+.sm
+{
+  font-size:1rem;
+}
+
+.md
+{
+  font-size:2rem;
+}
+
+.lg
+{
+  font-size:3rem;
+}
+
+.xl
+{
+  font-size:4rem;
+}
+
+/* Margin */
+.my-1
+{
+  /* rem multiplies the font size of the root element by default
+  html tag has font-size:16px; unless you change it.*/
+  margin:1rem 0;
+}
+
+.my-2
+{
+  margin:1.5rem 0;
+}
+
+.my-3
+{
+  /* 2 x 16 = 32px */
+  margin:2.5rem 0;
+}
+
+.my-4
+{
+  /* 4 x 16 = 64*/
+  margin:3rem 0;
+}
+
+.my-5
+{
+  margin:4rem 0;
+}
+
+.m-0
+{
+  margin: 0;
+}
+
+.m-1
+{
+  /* rem multiplies the font size of the root element by default
+  html tag has font-size:16px; unless you change it.*/
+  margin:1rem;
+}
+
+.m-2
+{
+  margin:1.5rem;
+}
+
+.m-3
+{
+  /* 2 x 16 = 32px */
+  margin:2rem;
+}
+
+.m-4
+{
+  /* 4 x 16 = 64*/
+  margin:3rem;
+}
+
+.m-5
+{
+  margin:4rem;
+}
+
+
+/* Padding */
+.py-1
+{
+  /* rem multiplies the font size of the root element by default
+  html tag has font-size:16px; unless you change it.*/
+  padding:1rem 0;
+}
+
+.py-2
+{
+  padding:1.5rem 0;
+}
+
+.py-3
+{
+  /* 2 x 16 = 32px */
+  padding:2rem 0;
+}
+
+.py-4
+{
+  padding:3rem 0;
+}
+
+.py-5
+{
+  /* 4 x 16 = 64*/
+  padding:4rem 0;
+}
+
+.p-0
+{
+  padding:0;
+}
+
+.p-1
+{
+  padding:1rem;
+}
+
+.p-2
+{
+  padding:1.5rem;
+}
+
+.p-3
+{
+  /* 2 x 16 = 32px */
+  padding:2rem;
+}
+
+.p-4
+{
+  padding:3rem;
+}
+
+.p-5
+{
+  /* 4 x 16 = 64*/
+  padding:4rem;
+}
+
 
 @media screen and (max-width: 1200px)
 {

@@ -3,13 +3,89 @@
 
 <!-- {block} Adds this code to layout body-->
 {% block body %}
-  <div class="jumbotron text-center">
-    <h1>Gastric Diseases Classification App</h1>
-    <p class='lead'>A web application that will be used for medical and health
-purposes, the app is a platform for physicians and pathologists.</p>
-    {% if session.logged_in == NULL %}
-        <a href="/register" class='btn btn-primary btn-lg'>Register</a>
-        <a href="/login" class='btn btn-success btn-lg'>Login</a>
-    {% endif %}
+
+  <div class="jumbotron">
+    <div class="container">
+      <div class='row'>
+        <div class='col-md-7 col-xs-12'>
+            <h1 class=''>Gastric Precancerous Diseases Classification App</h1>
+            <p class=''>A web application that will be used for medical and health
+        purposes, the app is a platform for physicians.</p>
+        </div>
+        <div class="col-md-5 hidden-sm hidden-xs">
+          <img class='img-fluid' src="/static/img/doc2.png" alt="">
+        </div>
+     </div>
+   </div>
+ </div>
+
+  <div class="container">
+
+    <div class='content-container'>
+      <div class="row">
+
+        <div class="col-md-4 col-sm-6 col-xs-6">
+          <div class="panel panel-default card">
+            <img class='p-2' src="/static/img/uploadImage.svg" alt="">
+            <div class="panel-body">
+              <h3 class='card-title'>Upload Images</h3>
+              <p class='card-text'>Physicians can upload an endoscopy image in the system. Inorder to predict or classify the lesions visible in the image.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="col-md-4 col-sm-6 col-xs-6">
+          <div class="panel panel-default card">
+            <img class='p-2' src="/static/img/classifyImage.svg" alt="">
+            <div class="panel-body">
+              <h3 class='card-title'>Classify Images</h3>
+              <p class='card-text'>After the image is uploaded the physician can press the button to predict or classify the lesions visible in the system.</p>
+            </div>
+          </div>
+
+        </div>
+
+
+        <div class="col-md-4 col-sm-6 col-xs-6">
+          <div class="panel panel-default card">
+            <img class='p-2' src="/static/img/generateReport.svg" alt="">
+            <div class="panel-body">
+              <h3 class='card-title'>Generate Report</h3>
+              <p class='card-text'>After system displays it’s prediction the physician can generate the classification report in PDF format.</p>
+            </div>
+          </div>
+
+        </div>
+
+
+      </div>
+
+
+    </div>
+
+
   </div>
+
+  <section id='about' class='about bg-primary my-4 py-2'>
+      <div class="container">
+        <div class="content-container">
+          <div class="row">
+            <div class="col-md-8 col-xs-12 text-left p-2">
+              <h2 class='xl'>About</h2>
+              <p class='lead'>The services that will be provided to the physicians will be</p>
+              <ul class='lead fa-ul'>
+                 <li><span class="fa-li"><i class="fas fa-check-square"></i></span>Classification of gastric precancerous diseases.</li>
+                 <li><span class="fa-li"><i class="fas fa-check-square"></i></span>Managing patients by adding and generating patient’s records.</li>
+                 <li><span class="fa-li"><i class="fas fa-check-square"></i></span>Sharing those records with patients.</li>
+              </ul>
+            </div>
+            <img class='col-sm-4 hidden-sm hidden-xs' src="/static/img/about.png" style="width:30%;" alt="">
+          </div>
+        </div>
+      </div>
+</section>
+
+
+
 {% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'user_layout.html' %}
+
+{% block body %}
+    <section id="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="active"> Lab Requests</li>
+          </ol>
+    </section>
+    <hr>
+  <div class='table-responsive'>
+    <table class="table table-striped table-condensed">
+        <tr>
+            <th>ID</th>
+            <th>Patient name</th>
+            <th>Test category</th>
+            <th>Test name</th>
+            <th>Added On</th>
+            <th>Urgency Level</th>
+            <th></th>
+            <th></th>
+        </tr>
+        {% for patient in patients %}
+            <tr>
+                <td>{{patient.id}}</td>
+                <td>{{patient.p_name}}</td>
+                <td>{{patient.test_category}}</td>
+                <td>{{patient.test_name}}</td>
+                <td>{{patient.request_date}}</td>
+                <td>{{patient.urgency_level}}</td>
+                <td>
+                  <a target="_blank" href="invoice_pdf/{{patient.id}}" class="btn btn-info pull-right">Create Invoice</a>
+                </td>
+                <td>
+                  <form class='delete-form' action="{{url_for('delete_lab_request', id=patient.id)}}" method="post">
+                      <input type="hidden" name="_method" value="DELETE">
+                      <input type="submit" value="Delete" class="btn btn-danger">
+                  </form>
+                </td>
+
+            </tr>
+        {% endfor %}
+
+
+    </table>
+  </div>
+{% endblock %}

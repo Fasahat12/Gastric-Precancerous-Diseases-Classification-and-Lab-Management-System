@@ -6,10 +6,16 @@
 
     <!-- Including CSS and Bootstrap-->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <style media="screen">
+        *
+        {
+          font-family:Segoe UI;
+        }
+    </style>
   </head>
   <body>
       <div class="container">
-          <h1 class='text-center' style='text-decoration:underline solid blue;margin-bottom:50px;'>GPD Classifier Report</h1>
+          <h1 class='text-center' style='text-decoration:underline solid #000;margin-bottom:50px;'>GPDC Report</h1>
           <div class="row"  style='margin-bottom:50px;'>
             <div class="col-md-4">
 
@@ -18,31 +24,57 @@
 
             </div>
             <div class="col-md-4">
-              <img class='img-rounded pull pull-right' src="{{full_filename}}" width='140' height='140'>
             </div>
           </div>
-          <div class="row">
+          <div class="row"  style='margin-bottom:50px;'>
             <div class="col-md-12">
                 <table class='table table-condensed'>
                   <tr>
+                    <th>Patient ID</th>
                     <th>Name</th>
                     <th>Date of Birth</th>
                     <th>Age</th>
                     <th>Gender</th>
-                    <th>Time Added</th>
                   </tr>
                   <tr>
+                    <td>{{id}}</td>
                     <td>{{name}}</td>
                     <td>{{dob}}</td>
                     <td>{{age}}</td>
                     <td>{{gender}}</td>
-                    <td>{{time_added}}</td>
                   </tr>
                 </table>
             </div>
           </div>
+
+          <p class='text-left'><b>Report created at :</b> {{time_added}}</p>
+
+          <table class='table' style='margin-bottom:40px;'>
+            <tr>
+              <th>Test Name</th>
+              <th>Result</th>
+            </tr>
+            <tr>
+              <td>GPD Classification</td>
+              <td>{{pred}}</td>
+            </tr>
+          </table>
+
+
+          <img class='img-rounded pull pull-left' src="{{full_filename}}" width='140' height='140' style='margin-bottom:40px;'>
+
+          <div class="clearfix"></div>
+
+
+          <h4><b>Interpretation</b></h4>
+          {% if pred == 'Erosion'%}
+          <p>Gastric erosions are spots of damage on the lining of the stomach. It occurs when the mucous membrane lining the stomach becomes inflamed. The lining should be able to protect itself from acid of the stomach. Injury or illness makes it hard for the lining to work as it should. This can lead to the erosions.</p>
+          {% elif pred == 'Polyp'%}
+          <p>Gastric polyps are abnormal growths on the inner lining of your stomach. Most are harmless and don’t cause symptoms. But some of them turn into cancer.There are many types of gastric polyps. They happen for different reasons. Some have little or no risk of becoming cancer. Others have a higher risk of turning into cancer.There are many types of gastric polyps. They happen for different reasons. Some have little or no risk of becoming cancer. Others have a higher risk of turning into cancer.</p>
+          {% elif pred == 'Ulcer'%}
+          <p>A gastric ulcer is a disintegration of the stomach lining which interferes with the production of the mucous that coats the lining allowing stomach acid to come in contact with the stomach. This causes pain to the patient after eating, which encourages the production of stomach acid.</p>
+          {% endif %}
       </div>
-      <h4 class='bg-primary' style='margin-top:250px;padding:5px;'>GPD Classification: {{pred}}</h4>
 
   </body>
 </html>
